@@ -32,9 +32,8 @@ class Main(QtCore.QObject):
         ports = list(serial.tools.list_ports.comports())
         for p in ports:
             print p
-            print p[0]
             self.ui.comboCOM.addItem(p[0])
-        self.connected=1;
+        self.connected=2;
         
     def Elements_Init(self):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
