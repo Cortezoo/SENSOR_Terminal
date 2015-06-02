@@ -29,18 +29,26 @@ class Main(QtCore.QObject):
         self.ui = uic.loadUi('window.ui', baseinstance=None)
         self.Elements_Init()
         print "Program initialized"
-        print(list(serial.tools.list_ports.comports()))
+        ports = list(serial.tools.list_ports.comports())
+        for p in ports:
+            print p
+            print p[0]
+            self.ui.comboCOM.addItem(p[0])
+        self.connected=1;
         
     def Elements_Init(self):
-        self.ui.buttonOK.clicked.connect(self.buttonOKClicked)
+        self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
         self.ui.buttonEXIT.clicked.connect(self.buttonEXITClicked)
 
-    def buttonOKClicked(self):
-        print "Button OK Clicked"
+    def buttonConnectClicked(self):
+        print "Button Connect Clicked"
+        
         
     def buttonEXITClicked(self):
         print "Button EXIT Clicked"
-        myExitHandler()
+        #myExitHandler()
+        sys.exit()
+        
 
 
 def myExitHandler():

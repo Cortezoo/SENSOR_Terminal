@@ -13,30 +13,40 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
-  <widget class="QPushButton" name="buttonOK">
+  <widget class="QPushButton" name="buttonConnect">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>30</y>
+     <x>90</x>
+     <y>10</y>
      <width>75</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
-    <string>OK</string>
+    <string>Connect</string>
    </property>
   </widget>
   <widget class="QPushButton" name="buttonEXIT">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>60</y>
+     <x>320</x>
+     <y>10</y>
      <width>75</width>
      <height>23</height>
     </rect>
    </property>
    <property name="text">
     <string>EXIT</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="comboCOM">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
    </property>
   </widget>
  </widget>
