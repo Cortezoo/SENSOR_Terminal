@@ -33,7 +33,7 @@ class Main(QtCore.QObject):
         for p in ports:
             print p
             self.ui.comboCOM.addItem(p[0])
-        self.connected=2;
+        self.connected=1;
         
     def Elements_Init(self):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
