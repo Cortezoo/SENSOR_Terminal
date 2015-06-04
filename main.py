@@ -6,23 +6,35 @@ import sys
 import pygame
 #from pygame.locals import *
 from PyQt4 import QtCore, QtGui, uic
-from pywinusb import hid
-import threading
-import thread
-import time
-from ctypes import *
-import struct
-from struct import *
-from collections import deque
 import serial
+from serial import *
 import serial.tools.list_ports
+from threading import Thread
+import threading
+
+last_received = ''
 
 class Main(QtCore.QObject):
     
     def killAll(self):
         pygame.quit()
-        if self.connected:
-            self.ser.close()    
+        if self.ser.isOpen():
+            self.stop_receive.set()
+            self.connected=0
+            self.ser.close()  
+            print "Disconnected from " + self.ser.portstr   
+
+    def receiving(self, stop_event):
+        global last_received
+        buffer = ''
+        print "receiving"
+        while(not stop_event.is_set()):
+            # last_received = ser.readline()
+            buffer += self.ser.read(self.ser.inWaiting())
+            if '\n' in buffer:
+                last_received, buffer = buffer.split('\n')[-2:]   
+                print last_received
+
     
     def __init__(self):
         QtCore.QObject.__init__(self)
@@ -32,20 +44,43 @@ class Main(QtCore.QObject):
         ports = list(serial.tools.list_ports.comports())
         for p in ports:
             print p
-            self.ui.comboCOM.addItem(p[0])
-        self.connected=1;
+            if "STMicroelectronics" in p[1]:
+                self.ui.comboCOM.addItem(p[0]+" VCP")
+            else:
+                self.ui.comboCOM.addItem(p[0])
+        
+        
+ 
+   
         
     def Elements_Init(self):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
+        self.ui.buttonDisconnect.clicked.connect(self.buttonDisconnectClicked)
         self.ui.buttonEXIT.clicked.connect(self.buttonEXITClicked)
 
-    def buttonConnectClicked(self):
-        print "Button Connect Clicked"
         
+    def buttonConnectClicked(self):
+        self.ser = serial.Serial(int(self.ui.comboCOM.currentText()[3])-1, baudrate=115200)
+        print "Connected to " + self.ser.portstr 
+        self.ser.write("hello")
+        self.connected=1;
+        self.ui.buttonConnect.setEnabled(False)
+        self.ui.buttonDisconnect.setEnabled(True)
+        self.stop_receive = threading.Event()
+        Thread(target=self.receiving, args=(self.stop_receive,)).start()
+    
+    def buttonDisconnectClicked(self):
+        if self.ser.isOpen():
+            self.stop_receive.set()
+            self.connected=0
+            self.ser.close()
+            print "Disconnected from " + self.ser.portstr 
+        self.ui.buttonConnect.setEnabled(True)
+        self.ui.buttonDisconnect.setEnabled(False)
         
     def buttonEXITClicked(self):
         print "Button EXIT Clicked"
-        #myExitHandler()
+        myExitHandler()
         sys.exit()
         
 
