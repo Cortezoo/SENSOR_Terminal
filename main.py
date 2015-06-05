@@ -11,6 +11,9 @@ from serial import *
 import serial.tools.list_ports
 from threading import Thread
 import threading
+import struct
+from struct import *
+
 
 last_received = ''
 
@@ -31,10 +34,19 @@ class Main(QtCore.QObject):
         while(not stop_event.is_set()):
             # last_received = ser.readline()
             buffer += self.ser.read(self.ser.inWaiting())
-            if '\n' in buffer:
-                last_received, buffer = buffer.split('\n')[-2:]   
-                self.ui.textCOM.append(last_received)
+            if 'oooo' in buffer:
+                last_received, buffer = buffer.split('oooo')[-2:]
+                try:
+                    self.stucture_unpacked = unpack('Lfff', bytearray(last_received))
+                except:
+                    print "Bad package"
+                self.ui.textCOM.append(str(self.stucture_unpacked[1]))
                 self.ui.textCOM.verticalScrollBar().setSliderPosition(self.ui.textCOM.verticalScrollBar().maximum()+13)
+                self.emit(QtCore.SIGNAL("Voltage1(QString)"), "%5.2f" % self.stucture_unpacked[1])
+                self.emit(QtCore.SIGNAL("Voltage2(QString)"), "%5.2f" % self.stucture_unpacked[2])
+                self.emit(QtCore.SIGNAL("Temperature(QString)"), "%5.2f" % self.stucture_unpacked[3])
+                self.emit(QtCore.SIGNAL("pVolt1(int)"), int(self.stucture_unpacked[1]*100))
+                self.emit(QtCore.SIGNAL("pVolt2(int)"), int(self.stucture_unpacked[2]*100))
                 print last_received
 
     
@@ -59,6 +71,12 @@ class Main(QtCore.QObject):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
         self.ui.buttonDisconnect.clicked.connect(self.buttonDisconnectClicked)
         self.ui.buttonEXIT.clicked.connect(self.buttonEXITClicked)
+        
+        QtCore.QObject.connect(self, QtCore.SIGNAL("Voltage1(QString)"),self.ui.tbVolt1, QtCore.SLOT("setText(QString)"), QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("Voltage2(QString)"),self.ui.tbVolt2, QtCore.SLOT("setText(QString)"), QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("Temperature(QString)"),self.ui.tbTemp, QtCore.SLOT("setText(QString)"), QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("pVolt1(int)"),self.ui.progressVolt1, QtCore.SLOT("setValue(int)"), QtCore.Qt.QueuedConnection)
+        QtCore.QObject.connect(self, QtCore.SIGNAL("pVolt2(int)"),self.ui.progressVolt2, QtCore.SLOT("setValue(int)"), QtCore.Qt.QueuedConnection)
         
 
         
