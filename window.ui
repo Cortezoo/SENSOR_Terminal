@@ -65,6 +65,22 @@
     <string>Disconnect</string>
    </property>
   </widget>
+  <widget class="QTextEdit" name="textCOM">
+   <property name="geometry">
+    <rect>
+     <x>163</x>
+     <y>50</y>
+     <width>231</width>
+     <height>241</height>
+    </rect>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOn</enum>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

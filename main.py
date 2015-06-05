@@ -18,7 +18,7 @@ class Main(QtCore.QObject):
     
     def killAll(self):
         pygame.quit()
-        if self.ser.isOpen():
+        if self.connected==1:
             self.stop_receive.set()
             self.connected=0
             self.ser.close()  
@@ -33,10 +33,13 @@ class Main(QtCore.QObject):
             buffer += self.ser.read(self.ser.inWaiting())
             if '\n' in buffer:
                 last_received, buffer = buffer.split('\n')[-2:]   
+                self.ui.textCOM.append(last_received)
+                self.ui.textCOM.verticalScrollBar().setSliderPosition(self.ui.textCOM.verticalScrollBar().maximum()+13)
                 print last_received
 
     
     def __init__(self):
+        self.connected=0;
         QtCore.QObject.__init__(self)
         self.ui = uic.loadUi('window.ui', baseinstance=None)
         self.Elements_Init()
@@ -48,8 +51,7 @@ class Main(QtCore.QObject):
                 self.ui.comboCOM.addItem(p[0]+" VCP")
             else:
                 self.ui.comboCOM.addItem(p[0])
-        
-        
+        self.ui.textCOM.append('Program initialized')
  
    
         
@@ -57,6 +59,7 @@ class Main(QtCore.QObject):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
         self.ui.buttonDisconnect.clicked.connect(self.buttonDisconnectClicked)
         self.ui.buttonEXIT.clicked.connect(self.buttonEXITClicked)
+        
 
         
     def buttonConnectClicked(self):
@@ -64,7 +67,7 @@ class Main(QtCore.QObject):
         print "Connected to " + self.ser.portstr 
         self.ser.write("hello")
         self.connected=1;
-        self.ui.buttonConnect.setEnabled(False)
+        self.ui.buttonConnect.setEnabled(False) 
         self.ui.buttonDisconnect.setEnabled(True)
         self.stop_receive = threading.Event()
         Thread(target=self.receiving, args=(self.stop_receive,)).start()
