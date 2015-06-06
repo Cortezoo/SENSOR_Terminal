@@ -38,17 +38,17 @@ class Main(QtCore.QObject):
             if 'oooo' in buffer:
                 last_received, buffer = buffer.split('oooo')[-2:]
                 try:
-                    self.stucture_unpacked = unpack('Lfff', bytearray(last_received))
+                    self.stucture_unpacked = unpack('LLfff', bytearray(last_received))
                 except:
                     print "Bad package"
-                self.ui.textCOM.append(str(self.stucture_unpacked[1]))
+                self.ui.textCOM.append("V1 = " + "%5.2f" % self.stucture_unpacked[2] +" | V2 = " + "%5.2f" % self.stucture_unpacked[3] +" | T = " "%5.2f" % self.stucture_unpacked[4])
                 self.ui.textCOM.verticalScrollBar().setSliderPosition(self.ui.textCOM.verticalScrollBar().maximum()+13)
-                self.emit(QtCore.SIGNAL("Voltage1(QString)"), "%5.2f" % self.stucture_unpacked[1])
-                self.emit(QtCore.SIGNAL("Voltage2(QString)"), "%5.2f" % self.stucture_unpacked[2])
-                self.emit(QtCore.SIGNAL("Temperature(QString)"), "%5.2f" % self.stucture_unpacked[3])
-                self.emit(QtCore.SIGNAL("pVolt1(int)"), int(self.stucture_unpacked[1]*100))
-                self.emit(QtCore.SIGNAL("pVolt2(int)"), int(self.stucture_unpacked[2]*100))
-                print last_received
+                self.emit(QtCore.SIGNAL("Voltage1(QString)"), "%5.2f" % self.stucture_unpacked[2])
+                self.emit(QtCore.SIGNAL("Voltage2(QString)"), "%5.2f" % self.stucture_unpacked[3])
+                self.emit(QtCore.SIGNAL("Temperature(QString)"), "%5.2f" % self.stucture_unpacked[4])
+                self.emit(QtCore.SIGNAL("pVolt1(int)"), int(self.stucture_unpacked[2]*100))
+                self.emit(QtCore.SIGNAL("pVolt2(int)"), int(self.stucture_unpacked[3]*100))
+                #print last_received
 
     
     def __init__(self):
@@ -56,6 +56,7 @@ class Main(QtCore.QObject):
         QtCore.QObject.__init__(self)
         self.ui = uic.loadUi('window.ui', baseinstance=None)
         self.Elements_Init()
+        self.ControlRegisterOut=0x00000000;
         print "Program initialized"
         ports = list(serial.tools.list_ports.comports())
         for p in ports:
@@ -72,6 +73,8 @@ class Main(QtCore.QObject):
         self.ui.buttonConnect.clicked.connect(self.buttonConnectClicked)
         self.ui.buttonDisconnect.clicked.connect(self.buttonDisconnectClicked)
         self.ui.buttonEXIT.clicked.connect(self.buttonEXITClicked)
+        self.ui.buttonLed1On.clicked.connect(lambda: self.buttonEXITClickeLed1Clicked('On'))
+        self.ui.buttonLed1Off.clicked.connect(lambda: self.buttonEXITClickeLed1Clicked('Off'))
         
         QtCore.QObject.connect(self, QtCore.SIGNAL("Voltage1(QString)"),self.ui.tbVolt1, QtCore.SLOT("setText(QString)"), QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(self, QtCore.SIGNAL("Voltage2(QString)"),self.ui.tbVolt2, QtCore.SLOT("setText(QString)"), QtCore.Qt.QueuedConnection)
@@ -79,12 +82,26 @@ class Main(QtCore.QObject):
         QtCore.QObject.connect(self, QtCore.SIGNAL("pVolt1(int)"),self.ui.progressVolt1, QtCore.SLOT("setValue(int)"), QtCore.Qt.QueuedConnection)
         QtCore.QObject.connect(self, QtCore.SIGNAL("pVolt2(int)"),self.ui.progressVolt2, QtCore.SLOT("setValue(int)"), QtCore.Qt.QueuedConnection)
         
-
+    def buttonEXITClickeLed1Clicked(self, param):
+        if param=='On':
+            self.ControlRegisterOut &= ~(1 << 0)
+            self.ControlRegisterOut |= (1 << 0)
+            floatList = [0xFBFBFBFB, self.ControlRegisterOut, self.ui.doubleInput.value(), 0.0, 0.0, 0x6F6F6F6F]
+            print floatList
+            buf = struct.pack('LLfffL', *floatList)
+            self.ser.write(buf)
+        if param=='Off':
+            self.ControlRegisterOut &= ~(1 << 0)
+            self.ControlRegisterOut |= (0 << 0)
+            floatList = [0xFBFBFBFB, self.ControlRegisterOut, self.ui.doubleInput.value(), 0.0, 0.0, 0x6F6F6F6F]
+            print floatList
+            buf = struct.pack('LLfffL', *floatList)
+            self.ser.write(buf)
         
     def buttonConnectClicked(self):
         self.ser = serial.Serial(int(self.ui.comboCOM.currentText()[3])-1, baudrate=115200)
         print "Connected to " + self.ser.portstr 
-        self.ser.write("hello")
+        #self.ser.write("hello")
         self.connected=1;
         self.ui.buttonConnect.setEnabled(False) 
         self.ui.buttonDisconnect.setEnabled(True)
